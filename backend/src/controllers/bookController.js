@@ -1,13 +1,47 @@
 // src/controllers/bookController.js
 
 const Book = require("../models/Book");
+const User = require("../models/User");
 const bookService = require("../services/bookService");
+const {
+  uploadBookCover,
+  deleteFromCloudinary,
+} = require("../config/cloudinary");
+const { createActivity } = require("./activityController");
 
 // Add a new book
 exports.addBook = async (req, res) => {
   try {
     const bookData = req.body;
-    const newBook = await bookService.createBook(bookData, req.user.id);
+
+    // Handle cover image upload if provided
+    if (req.file) {
+      const uploadResult = await uploadBookCover(req.file.buffer);
+      bookData.coverImage = {
+        url: uploadResult.url,
+        publicId: uploadResult.publicId,
+      };
+    }
+
+    const newBook = await bookService.createBook(bookData, req.user._id);
+
+    // Update user's book count
+    await User.findByIdAndUpdate(req.user._id, {
+      $inc: { "socialStats.booksAddedCount": 1 },
+    });
+
+    // Create activity
+    await createActivity({
+      user: req.user._id,
+      type: "book_added",
+      title: `Added a new book: ${newBook.title}`,
+      description: `${req.user.name} added "${newBook.title}" by ${newBook.author}`,
+      relatedBook: newBook._id,
+      metadata: {
+        bookTitle: newBook.title,
+      },
+    });
+
     res.status(201).json(newBook);
   } catch (error) {
     res
@@ -180,7 +214,7 @@ exports.updateBook = async (req, res) => {
     const updatedBook = await bookService.updateBook(
       bookId,
       req.body,
-      req.user.id
+      req.user._id
     );
     if (!updatedBook) {
       return res
@@ -199,16 +233,139 @@ exports.updateBook = async (req, res) => {
 exports.deleteBook = async (req, res) => {
   try {
     const bookId = req.params.id;
-    const deletedBook = await bookService.deleteBook(bookId, req.user.id);
+    const deletedBook = await bookService.deleteBook(bookId, req.user._id);
     if (!deletedBook) {
       return res
         .status(404)
         .json({ message: "Book not found or not authorized" });
     }
+
+    // Delete cover image from Cloudinary if exists
+    if (deletedBook.coverImage && deletedBook.coverImage.publicId) {
+      await deleteFromCloudinary(deletedBook.coverImage.publicId);
+    }
+
+    // Update user's book count
+    await User.findByIdAndUpdate(req.user._id, {
+      $inc: { "socialStats.booksAddedCount": -1 },
+    });
+
     res.status(204).send();
   } catch (error) {
     res
       .status(500)
       .json({ message: "Error deleting book", error: error.message });
+  }
+};
+
+// Like/Unlike a book
+exports.toggleBookLike = async (req, res) => {
+  try {
+    const bookId = req.params.id;
+    const userId = req.user._id;
+
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    const existingLike = book.likes.find(
+      (like) => like.user.toString() === userId
+    );
+
+    if (existingLike) {
+      // Unlike
+      book.likes = book.likes.filter((like) => like.user.toString() !== userId);
+      book.likesCount = Math.max(0, book.likesCount - 1);
+    } else {
+      // Like
+      book.likes.push({ user: userId });
+      book.likesCount += 1;
+
+      // Create activity for book like
+      await createActivity({
+        user: userId,
+        type: "book_liked",
+        title: `Liked "${book.title}"`,
+        description: `${req.user.name} liked "${book.title}" by ${book.author}`,
+        relatedBook: bookId,
+        metadata: {
+          bookTitle: book.title,
+        },
+      });
+    }
+
+    await book.save();
+
+    res.json({
+      success: true,
+      data: {
+        isLiked: !existingLike,
+        likesCount: book.likesCount,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating like status",
+      error: error.message,
+    });
+  }
+};
+
+// Upload book cover
+exports.uploadBookCover = async (req, res) => {
+  try {
+    const bookId = req.params.id;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image file provided",
+      });
+    }
+
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({
+        success: false,
+        message: "Book not found",
+      });
+    }
+
+    // Check if user owns the book
+    if (book.addedBy.toString() !== req.user._id) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this book",
+      });
+    }
+
+    // Delete old cover image if exists
+    if (book.coverImage && book.coverImage.publicId) {
+      await deleteFromCloudinary(book.coverImage.publicId);
+    }
+
+    // Upload new cover image
+    const uploadResult = await uploadBookCover(req.file.buffer);
+
+    // Update book with new cover image
+    book.coverImage = {
+      url: uploadResult.url,
+      publicId: uploadResult.publicId,
+    };
+    await book.save();
+
+    res.json({
+      success: true,
+      data: {
+        coverImage: book.coverImage,
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading book cover:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error uploading book cover",
+    });
   }
 };

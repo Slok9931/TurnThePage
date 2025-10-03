@@ -5,6 +5,9 @@ const authRoutes = require("./routes/authRoutes");
 const bookRoutes = require("./routes/bookRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
+const activityRoutes = require("./routes/activityRoutes");
+const socialRoutes = require("./routes/socialRoutes");
+const userRoutes = require("./routes/userRoutes");
 const errorHandler = require("./middleware/errorHandler");
 require("dotenv").config();
 
@@ -25,6 +28,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/activities", activityRoutes);
+app.use("/api/social", socialRoutes);
+app.use("/api/users", userRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
