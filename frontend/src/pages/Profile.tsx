@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, BookOpen, Star, Users, UserPlus, UserCheck, UserX } from 'lucide-react'
+import { User, BookOpen, Star, Users, UserPlus, UserCheck, UserX, LogOut } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
@@ -24,7 +24,7 @@ interface FollowUser {
 }
 
 const Profile = () => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [myBooks, setMyBooks] = useState<Book[]>([])
   const [myReviews, setMyReviews] = useState<Review[]>([])
   const [followers, setFollowers] = useState<FollowUser[]>([])
@@ -94,7 +94,7 @@ const Profile = () => {
     <div className="container py-8">
       <div className="max-w-6xl mx-auto space-y-8">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="h-8 w-8 text-primary" />
@@ -104,6 +104,10 @@ const Profile = () => {
                 <p className="text-muted-foreground">{user?.email}</p>
               </div>
             </div>
+            <Button variant="destructive" onClick={logout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

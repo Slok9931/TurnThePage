@@ -3,10 +3,9 @@ import { BookOpen, User, LogOut, Activity, Home } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from './ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 
 export const Navbar = () => {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   return (
@@ -20,16 +19,10 @@ export const Navbar = () => {
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <Link to="/home">
-                <Button variant="ghost" size="sm">
-                  <Home className="h-4 w-4 mr-2" />
-                  Books
-                </Button>
-              </Link>
               <Link to="/dashboard">
                 <Button variant="ghost" size="sm">
-                  <Activity className="h-4 w-4 mr-2" />
-                  Dashboard
+                  <Activity className="h-4 w-4" />
+                   {/* Activities */}
                 </Button>
               </Link>
               <div className="flex items-center gap-2">
@@ -40,25 +33,6 @@ export const Navbar = () => {
                   <AvatarImage src={user?.profilePicture?.url} />
                   <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <User className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={logout} className="cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
             </>
           ) : (
