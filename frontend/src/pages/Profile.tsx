@@ -1,213 +1,124 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Tabs,
-  Tab,
-  Grid,
-  Avatar,
-  Card,
-  CardContent,
-  Rating,
-} from '@mui/material';
-import { Book, Person } from '@mui/icons-material';
-import { useAuth } from '../context/AuthContext';
-import BookCard from '../components/books/BookCard';
-import Loading from '../components/common/Loading';
-import ErrorMessage from '../components/common/ErrorMessage';
-import { bookService } from '../services/bookService';
-import { reviewService } from '../services/reviewService';
-import { getInitials, formatDate } from '../utils/helpers';
-import type { Review } from '../types/review.types'
-import type { Book as BookType } from '../types/book.types'
+import { useState, useEffect } from 'react';
+import { User, BookOpen, Star } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BookCard } from '@/components/BookCard';
+import { ReviewCard } from '@/components/ReviewCard';
+import { booksApi } from '@/api/books';
+import { reviewsApi } from '@/api/reviews';
+import { useAuth } from '@/hooks/useAuth';
+import type { Book, Review } from '@/types';
+import { toast } from 'sonner';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`profile-tabpanel-${index}`}
-      aria-labelledby={`profile-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-    </div>
-  );
-};
-
-const Profile: React.FC = () => {
+const Profile = () => {
   const { user } = useAuth();
-  const [tabValue, setTabValue] = useState(0);
-  const [userBooks, setUserBooks] = useState<BookType[]>([]);
-  const [userReviews, setUserReviews] = useState<Review[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [myBooks, setMyBooks] = useState<Book[]>([]);
+  const [myReviews, setMyReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [books, reviews] = await Promise.all([
-          bookService.getUserBooks(),
-          reviewService.getUserReviews(),
-        ]);
-        setUserBooks(books);
-        setUserReviews(reviews);
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to fetch user data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    fetchUserData();
+  }, []);
 
-    if (user) {
-      fetchUserData();
+  const fetchUserData = async () => {
+    try {
+      const [booksData, reviewsData] = await Promise.all([
+        booksApi.getMyBooks(),
+        reviewsApi.getMyReviews(),
+      ]);
+      setMyBooks(booksData);
+      setMyReviews(reviewsData);
+    } catch (error) {
+      toast.error('Failed to load profile data');
+    } finally {
+      setLoading(false);
     }
-  }, [user]);
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
   };
 
-  if (!user) {
-    return <ErrorMessage message="Please log in to view your profile" />;
+  if (loading) {
+    return (
+      <div className="container py-8">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div className="h-32 bg-muted animate-pulse rounded-lg" />
+          <div className="h-96 bg-muted animate-pulse rounded-lg" />
+        </div>
+      </div>
+    );
   }
 
-  if (isLoading) return <Loading message="Loading profile..." />;
-  if (error) return <ErrorMessage message={error} />;
-
   return (
-    <Box className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <Box className="container mx-auto px-4">
-        <Paper className="p-6 mb-6">
-          <Box className="flex items-center space-x-6">
-            <Avatar className="bg-blue-600 text-white w-20 h-20 text-2xl">
-              {getInitials(user.name)}
-            </Avatar>
-            <Box>
-              <Typography variant="h4" className="font-bold mb-2">
-                {user.name}
-              </Typography>
-              <Typography variant="body1" className="text-gray-600 dark:text-gray-400 mb-4">
-                {user.email}
-              </Typography>
-              <Box className="flex space-x-6">
-                <Box className="text-center">
-                  <Typography variant="h6" className="font-semibold">
-                    {userBooks.length}
-                  </Typography>
-                  <Typography variant="body2" className="text-gray-500">
-                    Books Added
-                  </Typography>
-                </Box>
-                <Box className="text-center">
-                  <Typography variant="h6" className="font-semibold">
-                    {userReviews.length}
-                  </Typography>
-                  <Typography variant="body2" className="text-gray-500">
-                    Reviews Written
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-        </Paper>
+    <div className="container py-8">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl">{user?.name}</CardTitle>
+                <p className="text-muted-foreground">{user?.email}</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                <BookOpen className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="text-2xl font-bold">{myBooks.length}</p>
+                  <p className="text-sm text-muted-foreground">Books Added</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                <Star className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="text-2xl font-bold">{myReviews.length}</p>
+                  <p className="text-sm text-muted-foreground">Reviews Written</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        <Paper className="p-6">
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            aria-label="profile tabs"
-            className="mb-4"
-          >
-            <Tab
-              icon={<Book />}
-              label="My Books"
-              id="profile-tab-0"
-              aria-controls="profile-tabpanel-0"
-            />
-            <Tab
-              icon={<Person />}
-              label="My Reviews"
-              id="profile-tab-1"
-              aria-controls="profile-tabpanel-1"
-            />
-          </Tabs>
-
-          <TabPanel value={tabValue} index={0}>
-            {userBooks.length === 0 ? (
-              <Box className="text-center py-12">
-                <Typography variant="h6" className="text-gray-500 mb-2">
-                  No books added yet
-                </Typography>
-                <Typography variant="body2" className="text-gray-400">
-                  Start building your collection by adding your first book!
-                </Typography>
-              </Box>
+        <Tabs defaultValue="books">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="books">My Books</TabsTrigger>
+            <TabsTrigger value="reviews">My Reviews</TabsTrigger>
+          </TabsList>
+          <TabsContent value="books" className="space-y-4">
+            {myBooks.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">You haven't added any books yet</p>
+                </CardContent>
+              </Card>
             ) : (
-              <Grid container spacing={4}>
-                {userBooks.map((book) => (
-                  <Grid item xs={12} sm={6} lg={4} key={book._id}>
-                    <BookCard book={book} />
-                  </Grid>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {myBooks.map((book) => (
+                  <BookCard key={book._id} book={book} />
                 ))}
-              </Grid>
+              </div>
             )}
-          </TabPanel>
-
-          <TabPanel value={tabValue} index={1}>
-            {userReviews.length === 0 ? (
-              <Box className="text-center py-12">
-                <Typography variant="h6" className="text-gray-500 mb-2">
-                  No reviews written yet
-                </Typography>
-                <Typography variant="body2" className="text-gray-400">
-                  Share your thoughts by reviewing books in our collection!
-                </Typography>
-              </Box>
+          </TabsContent>
+          <TabsContent value="reviews" className="space-y-4">
+            {myReviews.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">You haven't written any reviews yet</p>
+                </CardContent>
+              </Card>
             ) : (
-              <Grid container spacing={3}>
-                {userReviews.map((review) => (
-                  <Grid item xs={12} key={review._id}>
-                    <Card>
-                      <CardContent>
-                        <Box className="flex justify-between items-start mb-3">
-                          <Typography variant="h6" className="font-semibold">
-                            Review for Book
-                          </Typography>
-                          <Typography variant="caption" className="text-gray-500">
-                            {formatDate(review.createdAt)}
-                          </Typography>
-                        </Box>
-                        
-                        <Box className="flex items-center mb-3">
-                          <Rating value={review.rating} readOnly size="small" />
-                          <Typography variant="body2" className="ml-2 text-gray-600">
-                            {review.rating}/5
-                          </Typography>
-                        </Box>
-                        
-                        <Typography variant="body2" className="text-gray-700 dark:text-gray-300">
-                          {review.reviewText}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
+              <div className="space-y-4">
+                {myReviews.map((review) => (
+                  <ReviewCard key={review._id} review={review} />
                 ))}
-              </Grid>
+              </div>
             )}
-          </TabPanel>
-        </Paper>
-      </Box>
-    </Box>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
   );
 };
 

@@ -1,59 +1,46 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { ThemeProvider } from './context/ThemeContext'
-import { AuthProvider } from './context/AuthContext'
-import Header from './components/common/Header'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
-import BookDetailsPage from './pages/BookDetailsPage'
-import AddEditBook from './pages/AddEditBook'
-import Profile from './pages/Profile'
-import { ROUTES } from './utils/constants'
-import ProtectedRoute from './components/common/ProtectedRoute'
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./hooks/useAuth";
+import { Navbar } from "./components/Navbar";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import Landing from "./pages/Landing";
+import Signup from "./pages/Signup";
+import Login from "./pages/Login";
+import Home from "./pages/Home";
+import BookDetail from "./pages/BookDetail";
+import AddBook from "./pages/AddBook";
+import EditBook from "./pages/EditBook";
+import Profile from "./pages/Profile";
+import NotFound from "./pages/NotFound";
 
-function App() {
-  return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <div className="App">
-            <Header />
-            <Routes>
-              <Route path={ROUTES.HOME} element={<Home />} />
-              <Route path={ROUTES.LOGIN} element={<Login />} />
-              <Route path={ROUTES.SIGNUP} element={<Signup />} />
-              <Route path="/book/:id" element={<BookDetailsPage />} />
-              <Route
-                path={ROUTES.ADD_BOOK}
-                element={
-                  <ProtectedRoute>
-                    <AddEditBook />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/edit-book/:id"
-                element={
-                  <ProtectedRoute>
-                    <AddEditBook />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.PROFILE}
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
-            </Routes>
-          </div>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
-  )
-}
+const queryClient = new QueryClient();
 
-export default App
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/book/:id" element={<ProtectedRoute><BookDetail /></ProtectedRoute>} />
+            <Route path="/add-book" element={<ProtectedRoute><AddBook /></ProtectedRoute>} />
+            <Route path="/edit-book/:id" element={<ProtectedRoute><EditBook /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
