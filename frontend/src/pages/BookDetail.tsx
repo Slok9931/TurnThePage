@@ -1,28 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { BookOpen, Calendar, User, ArrowLeft, Edit, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { ReviewCard } from '@/components/ReviewCard';
-import { StarRating } from '@/components/StarRating';
-import { booksApi } from '@/api/books';
-import { reviewsApi } from '@/api/reviews';
-import { useAuth } from '@/hooks/useAuth';
-import type { Book, Review, ReviewStats } from '@/types';
 import { toast } from 'sonner';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { booksApi } from '../api/books'
+import { reviewsApi } from '../api/reviews'
+import { useAuth } from '../hooks/useAuth'
+import type { Book } from '../types/book.types'
+import type { Review, ReviewStats } from '../types/review.types'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Badge } from '../components/ui/badge'
+import { Label } from '../components/ui/label'
+import { StarRating } from '../components/StarRating'
+import { Textarea } from '../components/ui/textarea'
+import { ReviewCard } from '../components/ReviewCard'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog'
 
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,7 +24,7 @@ const BookDetail = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(1);
   const [reviewText, setReviewText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
@@ -219,7 +211,7 @@ const BookDetail = () => {
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
                     required
-                    rows={4}
+                    rows={10}
                   />
                 </div>
                 <div className="flex gap-2">
@@ -232,7 +224,7 @@ const BookDetail = () => {
                       variant="outline"
                       onClick={() => {
                         setEditingReview(null);
-                        setRating(5);
+                        setRating(1);
                         setReviewText('');
                       }}
                     >

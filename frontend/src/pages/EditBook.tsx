@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { booksApi } from '@/api/books';
 import { toast } from 'sonner';
+import { booksApi } from '../api/books'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Label } from '../components/ui/label'
+import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 
 const EditBook = () => {
   const { id } = useParams<{ id: string }>();
@@ -133,7 +133,7 @@ const EditBook = () => {
                 <Textarea
                   id="description"
                   name="description"
-                  rows={5}
+                  rows={10}
                   value={formData.description}
                   onChange={handleChange}
                   required
