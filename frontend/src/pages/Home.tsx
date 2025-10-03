@@ -10,6 +10,7 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from '../component
 import { BookCard } from '../components/BookCard'
 import { BookTableRow } from '../components/BookTableRow'
 import { GridSkeleton, TableSkeleton } from '../components/Skeletons'
+import AddBookDialog from '../components/AddBookDialog'
 
 type ViewMode = 'grid' | 'table'
 
@@ -55,9 +56,9 @@ const Home = () => {
   // Extract unique genres from books with splitting logic
   const genres = useMemo(() => {
     if (!books.length) return []
-    
+
     const allGenres = new Set<string>()
-    
+
     books.forEach((book: Book) => {
       if (book.genre && book.genre.trim() !== '') {
         // Split by comma, forward slash, and pipe, then clean up
@@ -65,11 +66,11 @@ const Home = () => {
           .split(/[,/|]/)
           .map(genre => genre.trim())
           .filter(genre => genre !== '')
-        
+
         splitGenres.forEach(genre => allGenres.add(genre))
       }
     })
-    
+
     return Array.from(allGenres).sort()
   }, [books])
 
@@ -86,8 +87,8 @@ const Home = () => {
         setLoadingMore(true)
       }
 
-      let response: { books: Book[]; pagination: PaginationInfo };
-      
+      let response: { books: Book[]; pagination: PaginationInfo }
+
       if (viewMode === 'table' || reset) {
         // For table view or reset, use page-based pagination
         response = await booksApi.getBooks(
@@ -158,20 +159,22 @@ const Home = () => {
   return (
     <div className="container py-8 space-y-8">
       <div className="space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-          Discover Books
-        </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+            Discover Books
+          </h1>
+        </div>
 
         {/* Search and Filters */}
         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1 max-w-3xl">
+          <div className="flex flex-row flex-wrap gap-4 flex-1 max-w-3xl">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Search by title, author, or genre..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 min-w-20"
               />
             </div>
             <div className="flex gap-2">
@@ -213,25 +216,28 @@ const Home = () => {
           </div>
 
           {/* View Toggle */}
-          <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => handleViewModeChange('grid')}
-              className="flex items-center gap-2"
-            >
-              <Grid3X3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Grid</span>
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => handleViewModeChange('table')}
-              className="flex items-center gap-2"
-            >
-              <List className="h-4 w-4" />
-              <span className="hidden sm:inline">Table</span>
-            </Button>
+          <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => handleViewModeChange('grid')}
+                className="flex items-center gap-2"
+              >
+                <Grid3X3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Grid</span>
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => handleViewModeChange('table')}
+                className="flex items-center gap-2"
+              >
+                <List className="h-4 w-4" />
+                <span className="hidden sm:inline">Table</span>
+              </Button>
+            </div>
+            <AddBookDialog onBookAdded={() => fetchBooks(true)} />
           </div>
         </div>
 
@@ -268,11 +274,11 @@ const Home = () => {
               <BookCard key={`${book._id}-${book.title}`} book={book} />
             ))}
           </div>
-          
+
           {/* Load More Button for Grid View */}
           {pagination.hasNext && (
             <div className="flex justify-center">
-              <Button 
+              <Button
                 onClick={handleLoadMore}
                 variant="outline"
                 size="lg"
@@ -290,7 +296,7 @@ const Home = () => {
               </Button>
             </div>
           )}
-          
+
           {/* Loading More Shimmer */}
           {loadingMore && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
