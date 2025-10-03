@@ -1,5 +1,5 @@
-import api from "../lib/api"
-import type { Book } from "../types/book.types"
+import api from "../lib/api";
+import type { Book } from "../types/index";
 
 interface BookFormData {
   title: string;
@@ -10,16 +10,26 @@ interface BookFormData {
 }
 
 export const booksApi = {
-  async getBooks(page = 1, limit = 10, search?: string, genre?: string, skip?: number) {
+  async getBooks(
+    page = 1,
+    limit = 10,
+    search?: string,
+    genre?: string,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: string
+  ) {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
     });
-    
-    if (search) params.append('search', search);
-    if (genre) params.append('genre', genre);
-    if (skip !== undefined) params.append('skip', skip.toString());
-    
+
+    if (search) params.append("search", search);
+    if (genre) params.append("genre", genre);
+    if (skip !== undefined) params.append("skip", skip.toString());
+    if (sortBy) params.append("sortBy", sortBy);
+    if (sortOrder) params.append("sortOrder", sortOrder);
+
     const response = await api.get(`/books?${params}`);
     return response.data;
   },
@@ -30,11 +40,14 @@ export const booksApi = {
   },
 
   addBook: async (bookData: BookFormData): Promise<Book> => {
-    const { data } = await api.post<Book>('/books', bookData);
+    const { data } = await api.post<Book>("/books", bookData);
     return data;
   },
 
-  updateBook: async (id: string, bookData: Partial<BookFormData>): Promise<Book> => {
+  updateBook: async (
+    id: string,
+    bookData: Partial<BookFormData>
+  ): Promise<Book> => {
     const { data } = await api.put<Book>(`/books/${id}`, bookData);
     return data;
   },
@@ -44,7 +57,7 @@ export const booksApi = {
   },
 
   getMyBooks: async (): Promise<Book[]> => {
-    const { data } = await api.get<Book[]>('/books/user/my-books');
+    const { data } = await api.get<Book[]>("/books/user/my-books");
     return data;
   },
 };

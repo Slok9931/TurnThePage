@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Calendar, ExternalLink } from 'lucide-react'
+import { Calendar, ExternalLink, Star } from 'lucide-react'
 import type { Book } from '../types'
 import { TableCell, TableRow } from './ui/table'
 import { Badge } from './ui/badge'
@@ -28,6 +28,16 @@ export const BookTableRow = ({ book }: BookTableRowProps) => {
                     <Calendar className="h-3 w-3" />
                     <span className="text-sm">{book.publishedYear}</span>
                 </div>
+            </TableCell>
+            <TableCell className="text-center">
+                {book.averageRating !== undefined && book.averageRating > 0 ? (
+                    <div className="flex items-center justify-center gap-1">
+                        <Star className="h-3 w-3 text-primary fill-primary" />
+                        <span className="text-sm font-medium">{book.averageRating.toFixed(1)}</span>
+                    </div>
+                ) : (
+                    <span className="text-xs text-muted-foreground">No ratings</span>
+                )}
             </TableCell>
             <TableCell className="text-sm text-muted-foreground max-w-xs">
                 <div className="truncate" title={book.description}>

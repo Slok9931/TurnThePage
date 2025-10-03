@@ -31,6 +31,8 @@ const Home = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [genreFilter, setGenreFilter] = useState('')
   const [booksPerPage, setBooksPerPage] = useState(10) // Default books per page
+  const [sortBy, setSortBy] = useState('createdAt')
+  const [sortOrder, setSortOrder] = useState('desc')
   const [pagination, setPagination] = useState<PaginationInfo>({
     currentPage: 1,
     totalPages: 0,
@@ -76,7 +78,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchBooks(true) // Reset books when filters change
-  }, [searchTerm, genreFilter, booksPerPage])
+  }, [searchTerm, genreFilter, booksPerPage, sortBy, sortOrder])
 
   const fetchBooks = async (reset = false, page = 1) => {
     try {
@@ -95,7 +97,10 @@ const Home = () => {
           page,
           booksPerPage,
           searchTerm || undefined,
-          genreFilter && genreFilter !== 'all' ? genreFilter : undefined
+          genreFilter && genreFilter !== 'all' ? genreFilter : undefined,
+          undefined,
+          sortBy,
+          sortOrder
         )
         setBooks(response.books)
       } else {
@@ -106,7 +111,9 @@ const Home = () => {
           booksPerPage,
           searchTerm || undefined,
           genreFilter && genreFilter !== 'all' ? genreFilter : undefined,
-          currentSkip
+          currentSkip,
+          sortBy,
+          sortOrder
         )
         setBooks(prevBooks => [...prevBooks, ...response.books])
       }
@@ -195,6 +202,29 @@ const Home = () => {
                       No Genres Available
                     </SelectItem>
                   )}
+                </SelectContent>
+              </Select>
+
+              {/* Sort by selector */}
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="createdAt">Date Added</SelectItem>
+                  <SelectItem value="publishedYear">Year</SelectItem>
+                  <SelectItem value="averageRating">Rating</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Sort order selector */}
+              <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">Decrease</SelectItem>
+                  <SelectItem value="asc">Increase</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -319,6 +349,7 @@ const Home = () => {
                     <TableHead>Author</TableHead>
                     <TableHead>Genre</TableHead>
                     <TableHead className="text-center">Year</TableHead>
+                    <TableHead className="text-center">Rating</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>

@@ -10,7 +10,6 @@ import Signup from "./pages/Signup"
 import Login from "./pages/Login"
 import Home from "./pages/Home"
 import BookDetail from "./pages/BookDetail"
-import AddBook from "./pages/AddBook"
 import Profile from "./pages/Profile"
 import NotFound from "./pages/NotFound"
 import { TooltipProvider } from "./components/ui/tooltip"
@@ -35,7 +34,6 @@ const App = () => (
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
               <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/book/:id" element={<ProtectedRoute><BookDetail /></ProtectedRoute>} />
-              <Route path="/add-book" element={<ProtectedRoute><AddBook /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

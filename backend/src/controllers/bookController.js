@@ -19,12 +19,14 @@ exports.addBook = async (req, res) => {
 // Get all books with pagination
 exports.getAllBooks = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      search, 
+    const {
+      page = 1,
+      limit = 10,
+      search,
       genre,
-      skip 
+      skip,
+      sortBy = "createdAt",
+      sortOrder = "desc",
     } = req.query;
 
     // Convert to numbers
@@ -34,30 +36,99 @@ exports.getAllBooks = async (req, res) => {
 
     // Build query object
     const query = {};
-    
+
     if (search) {
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { author: { $regex: search, $options: 'i' } },
-        { genre: { $regex: search, $options: 'i' } }
+        { title: { $regex: search, $options: "i" } },
+        { author: { $regex: search, $options: "i" } },
+        { genre: { $regex: search, $options: "i" } },
       ];
     }
-    
+
     if (genre) {
       // Handle genre filtering with split genres (comma, slash, pipe separated)
-      query.genre = { $regex: genre, $options: 'i' };
+      query.genre = { $regex: genre, $options: "i" };
     }
 
     // Get total count for pagination info
     const total = await Book.countDocuments(query);
-    
-    // Get books with pagination
-    const books = await Book.find(query)
-      .skip(skipNum)
-      .limit(limitNum)
-      .sort({ createdAt: -1 })
-      .populate('reviews', 'rating comment user createdAt')
-      .populate('reviews.user', 'name');
+
+    // Build sort object
+    let sortObject = {};
+    if (sortBy === "publishedYear") {
+      sortObject.publishedYear = sortOrder === "asc" ? 1 : -1;
+    } else if (sortBy === "averageRating") {
+      // For average rating, we'll sort after aggregation
+      sortObject = null;
+    } else {
+      sortObject.createdAt = sortOrder === "asc" ? 1 : -1;
+    }
+
+    // Use aggregation pipeline to include average rating
+    const pipeline = [
+      { $match: query },
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "bookId",
+          as: "reviews",
+        },
+      },
+      {
+        $addFields: {
+          averageRating: {
+            $cond: {
+              if: { $gt: [{ $size: "$reviews" }, 0] },
+              then: { $avg: "$reviews.rating" },
+              else: 0,
+            },
+          },
+          reviewCount: { $size: "$reviews" },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "addedBy",
+          foreignField: "_id",
+          as: "addedBy",
+        },
+      },
+      {
+        $unwind: "$addedBy",
+      },
+      {
+        $project: {
+          title: 1,
+          author: 1,
+          description: 1,
+          genre: 1,
+          publishedYear: 1,
+          averageRating: 1,
+          reviewCount: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          "addedBy._id": 1,
+          "addedBy.name": 1,
+        },
+      },
+    ];
+
+    // Add sorting based on sortBy parameter
+    if (sortBy === "averageRating") {
+      pipeline.push({
+        $sort: { averageRating: sortOrder === "asc" ? 1 : -1, createdAt: -1 },
+      });
+    } else if (sortObject) {
+      pipeline.push({ $sort: sortObject });
+    }
+
+    // Add pagination
+    pipeline.push({ $skip: skipNum });
+    pipeline.push({ $limit: limitNum });
+
+    const books = await Book.aggregate(pipeline);
 
     // Calculate pagination info
     const totalPages = Math.ceil(total / limitNum);
@@ -74,14 +145,14 @@ exports.getAllBooks = async (req, res) => {
         hasNext,
         hasPrev,
         limit: limitNum,
-        skip: skipNum
-      }
+        skip: skipNum,
+      },
     });
   } catch (error) {
-    console.error('Error fetching books:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error while fetching books' 
+    console.error("Error fetching books:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching books",
     });
   }
 };

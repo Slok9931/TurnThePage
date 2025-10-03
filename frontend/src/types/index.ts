@@ -12,6 +12,8 @@ export interface Book {
   genre: string;
   publishedYear: number;
   addedBy: User | string;
+  averageRating?: number;
+  reviewCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }
