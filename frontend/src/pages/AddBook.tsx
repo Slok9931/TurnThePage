@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { booksApi } from '@/api/books';
 import { toast } from 'sonner';
+import { booksApi } from '../api/books'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Label } from '../components/ui/label'
+import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 
 const AddBook = () => {
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ const AddBook = () => {
 
   return (
     <div className="container py-8">
-      <div className="max-w-2xl mx-auto space-y-8">
+      <div className="mx-auto space-y-8">
         <Button variant="ghost" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
@@ -108,7 +108,7 @@ const AddBook = () => {
                 <Textarea
                   id="description"
                   name="description"
-                  rows={5}
+                  rows={10}
                   value={formData.description}
                   onChange={handleChange}
                   required
