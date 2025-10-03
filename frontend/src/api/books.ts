@@ -1,5 +1,5 @@
-import api from '@/lib/api';
-import type { Book, PaginatedBooks } from '@/types';
+import api from "../lib/api"
+import type { Book } from "../types/book.types"
 
 interface BookFormData {
   title: string;
@@ -10,11 +10,18 @@ interface BookFormData {
 }
 
 export const booksApi = {
-  getBooks: async (page = 1, limit = 12): Promise<PaginatedBooks> => {
-    const { data } = await api.get<PaginatedBooks>('/books', {
-      params: { page, limit },
+  async getBooks(page = 1, limit = 10, search?: string, genre?: string, skip?: number) {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
     });
-    return data;
+    
+    if (search) params.append('search', search);
+    if (genre) params.append('genre', genre);
+    if (skip !== undefined) params.append('skip', skip.toString());
+    
+    const response = await api.get(`/books?${params}`);
+    return response.data;
   },
 
   getBookById: async (id: string): Promise<Book> => {

@@ -12,6 +12,16 @@ import { BookTableRow } from '../components/BookTableRow'
 
 type ViewMode = 'grid' | 'table'
 
+interface PaginationInfo {
+  currentPage: number
+  totalPages: number
+  totalBooks: number
+  hasNext: boolean
+  hasPrev: boolean
+  limit: number
+  skip: number
+}
+
 const Home = () => {
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
@@ -19,13 +29,16 @@ const Home = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [genreFilter, setGenreFilter] = useState('')
-  
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(0)
-  const [totalBooks, setTotalBooks] = useState(0)
-  const [booksPerPage, setBooksPerPage] = useState(10) // Default books per page
-  const [hasMore, setHasMore] = useState(true)
+  const [booksPerPage, setBooksPerPage] = useState(12) // Default books per page
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 0,
+    totalBooks: 0,
+    hasNext: false,
+    hasPrev: false,
+    limit: 10,
+    skip: 0
+  })
 
   useEffect(() => {
     fetchBooks(true) // Reset books when filters change
@@ -36,38 +49,35 @@ const Home = () => {
       if (reset) {
         setLoading(true)
         setBooks([])
-        setCurrentPage(1)
       } else {
         setLoadingMore(true)
       }
 
-      const params = {
-        page,
-        limit: booksPerPage,
-        ...(searchTerm && { search: searchTerm }),
-        ...(genreFilter && genreFilter !== 'all' && { genre: genreFilter })
-      }
-
-      const data = await booksApi.getBooks(params.page, params.limit)
+      let response: { books: Book[]; pagination: PaginationInfo };
       
-      if (reset || viewMode === 'table') {
-        // For table view or reset, replace books
-        setBooks(Array.isArray(data) ? data : data.books || [])
+      if (viewMode === 'table' || reset) {
+        // For table view or reset, use page-based pagination
+        response = await booksApi.getBooks(
+          page,
+          booksPerPage,
+          searchTerm || undefined,
+          genreFilter && genreFilter !== 'all' ? genreFilter : undefined
+        )
+        setBooks(response.books)
       } else {
-        // For grid view, append books (load more functionality)
-        const newBooks = Array.isArray(data) ? data : data.books || []
-        setBooks(prevBooks => [...prevBooks, ...newBooks])
+        // For grid view load more, use skip-based pagination
+        const currentSkip = books.length
+        response = await booksApi.getBooks(
+          1,
+          booksPerPage,
+          searchTerm || undefined,
+          genreFilter && genreFilter !== 'all' ? genreFilter : undefined,
+          currentSkip
+        )
+        setBooks(prevBooks => [...prevBooks, ...response.books])
       }
 
-      // Update pagination info
-      if (data && !Array.isArray(data)) {
-        setTotalBooks(data.total || 0)
-        setTotalPages(Math.ceil((data.total || 0) / booksPerPage))
-        setHasMore(page < Math.ceil((data.total || 0) / booksPerPage))
-      } else {
-        const bookCount = Array.isArray(data) ? data.length : 0
-        setHasMore(bookCount === booksPerPage) // Assume more if we got full page
-      }
+      setPagination(response.pagination)
 
     } catch (error) {
       toast.error('Failed to load books')
@@ -79,46 +89,91 @@ const Home = () => {
   }
 
   const handleLoadMore = () => {
-    if (!loadingMore && hasMore) {
-      const nextPage = Math.floor(books.length / booksPerPage) + 1
-      fetchBooks(false, nextPage)
+    if (!loadingMore && pagination.hasNext) {
+      fetchBooks(false)
     }
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
     fetchBooks(true, page)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleBooksPerPageChange = (value: string) => {
     setBooksPerPage(parseInt(value))
-    setCurrentPage(1)
   }
 
-  const filteredBooks = books.filter(
-    (book) =>
-      (book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.genre.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (genreFilter === '' || genreFilter === 'all' || book.genre.toLowerCase() === genreFilter.toLowerCase())
-  )
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode)
+    // Reset books when changing view mode to ensure proper pagination
+    fetchBooks(true)
+  }
 
-  // Get unique genres for filter - fix empty values
+  // Get unique genres for filter
   const genres = [...new Set(books.map((book: Book) => book.genre).filter(genre => genre && genre.trim() !== ''))]
 
   // Generate page numbers for pagination
   const getPageNumbers = () => {
     const pages = []
     const maxPagesToShow = 5
-    const startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2))
-    const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1)
+    const startPage = Math.max(1, pagination.currentPage - Math.floor(maxPagesToShow / 2))
+    const endPage = Math.min(pagination.totalPages, startPage + maxPagesToShow - 1)
 
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i)
     }
     return pages
   }
+
+  // Loading skeletons
+  const GridSkeleton = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {[...Array(booksPerPage)].map((_, i) => (
+        <div key={i} className="h-64 bg-muted animate-pulse rounded-lg" />
+      ))}
+    </div>
+  )
+
+  const TableSkeleton = () => (
+    <div className="border rounded-lg">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead>Author</TableHead>
+            <TableHead>Genre</TableHead>
+            <TableHead className="text-center">Year</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[...Array(booksPerPage)].map((_, i) => (
+            <TableRow key={i}>
+              <td className="p-4">
+                <div className="h-4 bg-muted animate-pulse rounded w-32" />
+              </td>
+              <td className="p-4">
+                <div className="h-4 bg-muted animate-pulse rounded w-24" />
+              </td>
+              <td className="p-4">
+                <div className="h-4 bg-muted animate-pulse rounded w-20" />
+              </td>
+              <td className="p-4">
+                <div className="h-4 bg-muted animate-pulse rounded w-16 mx-auto" />
+              </td>
+              <td className="p-4">
+                <div className="h-4 bg-muted animate-pulse rounded w-48" />
+              </td>
+              <td className="p-4">
+                <div className="h-4 bg-muted animate-pulse rounded w-20 ml-auto" />
+              </td>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
 
   return (
     <div className="container py-8 space-y-8">
@@ -168,7 +223,7 @@ const Home = () => {
                 <SelectContent>
                   <SelectItem value="5">5</SelectItem>
                   <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
                   <SelectItem value="50">50</SelectItem>
                   <SelectItem value="75">75</SelectItem>
                   <SelectItem value="100">100</SelectItem>
@@ -182,7 +237,7 @@ const Home = () => {
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
               size="sm"
-              onClick={() => setViewMode('grid')}
+              onClick={() => handleViewModeChange('grid')}
               className="flex items-center gap-2"
             >
               <Grid3X3 className="h-4 w-4" />
@@ -191,7 +246,7 @@ const Home = () => {
             <Button
               variant={viewMode === 'table' ? 'secondary' : 'ghost'}
               size="sm"
-              onClick={() => setViewMode('table')}
+              onClick={() => handleViewModeChange('table')}
               className="flex items-center gap-2"
             >
               <List className="h-4 w-4" />
@@ -204,32 +259,23 @@ const Home = () => {
         {!loading && (
           <div className="flex justify-between items-center text-sm text-muted-foreground">
             <span>
-              Showing {filteredBooks.length} of {totalBooks} books
+              {viewMode === 'grid'
+                ? `Showing ${books.length} of ${pagination.totalBooks} books`
+                : `Showing ${((pagination.currentPage - 1) * pagination.limit) + 1} to ${Math.min(pagination.currentPage * pagination.limit, pagination.totalBooks)} of ${pagination.totalBooks} books`
+              }
               {searchTerm && <span> for "{searchTerm}"</span>}
               {genreFilter && genreFilter !== 'all' && <span> in "{genreFilter}"</span>}
             </span>
-            {viewMode === 'table' && totalPages > 1 && (
-              <span>Page {currentPage} of {totalPages}</span>
+            {viewMode === 'table' && pagination.totalPages > 1 && (
+              <span>Page {pagination.currentPage} of {pagination.totalPages}</span>
             )}
           </div>
         )}
       </div>
 
       {loading ? (
-        viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-64 bg-muted animate-pulse rounded-lg" />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />
-            ))}
-          </div>
-        )
-      ) : filteredBooks.length === 0 ? (
+        viewMode === 'grid' ? <GridSkeleton /> : <TableSkeleton />
+      ) : books.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-lg text-muted-foreground">
             {searchTerm || (genreFilter && genreFilter !== 'all') ? 'No books found matching your criteria' : 'No books available yet'}
@@ -238,63 +284,76 @@ const Home = () => {
       ) : viewMode === 'grid' ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredBooks.map((book) => (
-              <BookCard key={book._id} book={book} />
+            {books.map((book) => (
+              <BookCard key={`${book._id}-${book.title}`} book={book} />
             ))}
           </div>
           
           {/* Load More Button for Grid View */}
-          {hasMore && !loadingMore && (
+          {pagination.hasNext && (
             <div className="flex justify-center">
               <Button 
                 onClick={handleLoadMore}
                 variant="outline"
                 size="lg"
                 className="px-8"
+                disabled={loadingMore}
               >
-                Load More Books
+                {loadingMore ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Loading More...
+                  </>
+                ) : (
+                  'Load More Books'
+                )}
               </Button>
             </div>
           )}
           
-          {/* Loading More Indicator */}
+          {/* Loading More Shimmer */}
           {loadingMore && (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin mr-2" />
-              <span>Loading more books...</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(booksPerPage)].map((_, i) => (
+                <div key={`loading-${i}`} className="h-64 bg-muted animate-pulse rounded-lg" />
+              ))}
             </div>
           )}
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>Genre</TableHead>
-                  <TableHead className="text-center">Year</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredBooks.map((book) => (
-                  <BookTableRow key={book._id} book={book} />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          {loadingMore ? (
+            <TableSkeleton />
+          ) : (
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Author</TableHead>
+                    <TableHead>Genre</TableHead>
+                    <TableHead className="text-center">Year</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {books.map((book) => (
+                    <BookTableRow key={book._id} book={book} />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
           {/* Pagination for Table View */}
-          {totalPages > 1 && (
+          {pagination.totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                disabled={!pagination.hasPrev || loadingMore}
                 className="flex items-center gap-1"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -305,9 +364,10 @@ const Home = () => {
                 {getPageNumbers().map((page) => (
                   <Button
                     key={page}
-                    variant={currentPage === page ? "default" : "outline"}
+                    variant={pagination.currentPage === page ? "default" : "outline"}
                     size="sm"
                     onClick={() => handlePageChange(page)}
+                    disabled={loadingMore}
                     className="w-10 h-10"
                   >
                     {page}
@@ -318,8 +378,8 @@ const Home = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                disabled={!pagination.hasNext || loadingMore}
                 className="flex items-center gap-1"
               >
                 Next

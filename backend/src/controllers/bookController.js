@@ -19,13 +19,69 @@ exports.addBook = async (req, res) => {
 // Get all books with pagination
 exports.getBooks = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
-    const books = await bookService.getAllBooks(page, limit);
-    res.status(200).json(books);
+    const { 
+      page = 1, 
+      limit = 10, 
+      search, 
+      genre,
+      skip 
+    } = req.query;
+
+    // Convert to numbers
+    const limitNum = parseInt(limit);
+    const pageNum = parseInt(page);
+    const skipNum = skip ? parseInt(skip) : (pageNum - 1) * limitNum;
+
+    // Build query object
+    const query = {};
+    
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { author: { $regex: search, $options: 'i' } },
+        { genre: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    if (genre) {
+      query.genre = { $regex: genre, $options: 'i' };
+    }
+
+    // Get total count for pagination info
+    const total = await Book.countDocuments(query);
+    
+    // Get books with pagination
+    const books = await Book.find(query)
+      .skip(skipNum)
+      .limit(limitNum)
+      .sort({ createdAt: -1 })
+      .populate('reviews', 'rating comment user createdAt')
+      .populate('reviews.user', 'name');
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limitNum);
+    const hasNext = skipNum + limitNum < total;
+    const hasPrev = skipNum > 0;
+
+    res.json({
+      success: true,
+      books,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalBooks: total,
+        hasNext,
+        hasPrev,
+        limit: limitNum,
+        skip: skipNum
+      }
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error retrieving books", error: error.message });
+    console.error('Error fetching books:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while fetching books' 
+    });
   }
 };
 
