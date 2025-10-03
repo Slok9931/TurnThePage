@@ -1,7 +1,7 @@
 const express = require("express");
 const {
   addBook,
-  getBooks,
+  getAllBooks,
   getBookById,
   updateBook,
   deleteBook,
@@ -14,7 +14,7 @@ const router = express.Router();
 router.post("/", authenticate, addBook);
 
 // Route to get all books with pagination
-router.get("/", getBooks);
+router.get("/", getAllBooks);
 
 // Route to get a book by ID
 router.get("/:id", getBookById);

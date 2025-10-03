@@ -17,7 +17,7 @@ exports.addBook = async (req, res) => {
 };
 
 // Get all books with pagination
-exports.getBooks = async (req, res) => {
+exports.getAllBooks = async (req, res) => {
   try {
     const { 
       page = 1, 
@@ -44,6 +44,7 @@ exports.getBooks = async (req, res) => {
     }
     
     if (genre) {
+      // Handle genre filtering with split genres (comma, slash, pipe separated)
       query.genre = { $regex: genre, $options: 'i' };
     }
 

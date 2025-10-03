@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Search, Grid3X3, List, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Book } from '../types'
@@ -28,7 +28,6 @@ const Home = () => {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [genreFilter, setGenreFilter] = useState('')
   const [booksPerPage, setBooksPerPage] = useState(10) // Default books per page
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -40,6 +39,39 @@ const Home = () => {
     limit: 10,
     skip: 0
   })
+
+  // Use useMemo to persist viewMode in localStorage
+  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem('bookViewMode')
+    return (saved === 'grid' || saved === 'table') ? saved as ViewMode : 'grid'
+  })
+
+  // Update localStorage when viewMode changes
+  const setViewMode = (mode: ViewMode) => {
+    setViewModeState(mode)
+    localStorage.setItem('bookViewMode', mode)
+  }
+
+  // Extract unique genres from books with splitting logic
+  const genres = useMemo(() => {
+    if (!books.length) return []
+    
+    const allGenres = new Set<string>()
+    
+    books.forEach((book: Book) => {
+      if (book.genre && book.genre.trim() !== '') {
+        // Split by comma, forward slash, and pipe, then clean up
+        const splitGenres = book.genre
+          .split(/[,/|]/)
+          .map(genre => genre.trim())
+          .filter(genre => genre !== '')
+        
+        splitGenres.forEach(genre => allGenres.add(genre))
+      }
+    })
+    
+    return Array.from(allGenres).sort()
+  }, [books])
 
   useEffect(() => {
     fetchBooks(true) // Reset books when filters change
@@ -109,9 +141,6 @@ const Home = () => {
     // Reset books when changing view mode to ensure proper pagination
     fetchBooks(true)
   }
-
-  // Get unique genres for filter
-  const genres = [...new Set(books.map((book: Book) => book.genre).filter(genre => genre && genre.trim() !== ''))]
 
   // Generate page numbers for pagination
   const getPageNumbers = () => {
