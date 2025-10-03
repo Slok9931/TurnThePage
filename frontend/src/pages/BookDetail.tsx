@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { BookOpen, Calendar, User, ArrowLeft, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { BookOpen, Calendar, User, ArrowLeft, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { booksApi } from '../api/books'
 import { reviewsApi } from '../api/reviews'
 import { useAuth } from '../hooks/useAuth'
@@ -15,98 +15,100 @@ import { Textarea } from '../components/ui/textarea'
 import { ReviewCard } from '../components/ReviewCard'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog'
 import EditBookDialog from '../components/EditBookDialog'
+import BookAnalyticsComponent from '../components/BookAnalytics'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 
 const BookDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [book, setBook] = useState<Book | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [stats, setStats] = useState<ReviewStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [rating, setRating] = useState(1);
-  const [reviewText, setReviewText] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [editingReview, setEditingReview] = useState<Review | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const [book, setBook] = useState<Book | null>(null)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [stats, setStats] = useState<ReviewStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [rating, setRating] = useState(1)
+  const [reviewText, setReviewText] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [editingReview, setEditingReview] = useState<Review | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   useEffect(() => {
     if (id) {
-      fetchBookData();
+      fetchBookData()
     }
-  }, [id]);
+  }, [id])
 
   const fetchBookData = async () => {
-    if (!id) return;
+    if (!id) return
     try {
       const [bookData, reviewsData, statsData] = await Promise.all([
         booksApi.getBookById(id),
         reviewsApi.getReviewsForBook(id),
         reviewsApi.getBookReviewStats(id),
-      ]);
-      setBook(bookData);
-      setReviews(reviewsData);
-      setStats(statsData);
+      ])
+      setBook(bookData)
+      setReviews(reviewsData)
+      setStats(statsData)
     } catch (error) {
-      toast.error('Failed to load book details');
+      toast.error('Failed to load book details')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSubmitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!id || !user) return;
+    e.preventDefault()
+    if (!id || !user) return
 
-    setSubmitting(true);
+    setSubmitting(true)
     try {
       if (editingReview) {
-        await reviewsApi.editReview(editingReview._id, { rating, reviewText });
-        toast.success('Review updated successfully');
+        await reviewsApi.editReview(editingReview._id, { rating, reviewText })
+        toast.success('Review updated successfully')
       } else {
-        await reviewsApi.addReview(id, { rating, reviewText });
-        toast.success('Review added successfully');
+        await reviewsApi.addReview(id, { rating, reviewText })
+        toast.success('Review added successfully')
       }
-      setRating(5);
-      setReviewText('');
-      setEditingReview(null);
-      fetchBookData();
+      setRating(5)
+      setReviewText('')
+      setEditingReview(null)
+      fetchBookData()
     } catch (error) {
-      toast.error('Failed to submit review');
+      toast.error('Failed to submit review')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   const handleEditReview = (review: Review) => {
-    setEditingReview(review);
-    setRating(review.rating);
-    setReviewText(review.reviewText);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    setEditingReview(review)
+    setRating(review.rating)
+    setReviewText(review.reviewText)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const handleDeleteReview = async (reviewId: string) => {
     try {
-      await reviewsApi.deleteReview(reviewId);
-      toast.success('Review deleted successfully');
-      fetchBookData();
+      await reviewsApi.deleteReview(reviewId)
+      toast.success('Review deleted successfully')
+      fetchBookData()
     } catch (error) {
-      toast.error('Failed to delete review');
+      toast.error('Failed to delete review')
     }
-  };
+  }
 
   const handleDeleteBook = async () => {
-    if (!id) return;
+    if (!id) return
     try {
-      await booksApi.deleteBook(id);
-      toast.success('Book deleted successfully');
-      navigate('/home');
+      await booksApi.deleteBook(id)
+      toast.success('Book deleted successfully')
+      navigate('/home')
     } catch (error) {
-      toast.error('Failed to delete book');
+      toast.error('Failed to delete book')
     }
-  };
+  }
 
-  const isBookOwner = user && book && typeof book.addedBy === 'object' && book.addedBy._id === user._id;
+  const isBookOwner = user && book && typeof book.addedBy === 'object' && book.addedBy._id === user._id
 
   if (loading) {
     return (
@@ -116,7 +118,7 @@ const BookDetail = () => {
           <div className="h-96 bg-muted animate-pulse rounded-lg" />
         </div>
       </div>
-    );
+    )
   }
 
   if (!book) {
@@ -129,7 +131,7 @@ const BookDetail = () => {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -162,8 +164,8 @@ const BookDetail = () => {
               </div>
               {isBookOwner && (
                 <div className="flex gap-2">
-                  <EditBookDialog 
-                    book={book} 
+                  <EditBookDialog
+                    book={book}
                     onBookUpdated={() => fetchBookData()}
                   />
                   <Button variant="outline" size="icon" onClick={() => setShowDeleteDialog(true)}>
@@ -224,9 +226,9 @@ const BookDetail = () => {
                       type="button"
                       variant="outline"
                       onClick={() => {
-                        setEditingReview(null);
-                        setRating(1);
-                        setReviewText('');
+                        setEditingReview(null)
+                        setRating(1)
+                        setReviewText('')
                       }}
                     >
                       Cancel
@@ -238,28 +240,40 @@ const BookDetail = () => {
           </Card>
         )}
 
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Reviews</h2>
-          {reviews.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No reviews yet. Be the first to review!</p>
-              </CardContent>
-            </Card>
-          ) : (
+        <Tabs defaultValue="reviews" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="reviews" className="space-y-4">
             <div className="space-y-4">
-              {reviews.map((review) => (
-                <ReviewCard
-                  key={review._id}
-                  review={review}
-                  currentUserId={user?._id}
-                  onEdit={handleEditReview}
-                  onDelete={handleDeleteReview}
-                />
-              ))}
+              {reviews.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <p className="text-muted-foreground">No reviews yet. Be the first to review!</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <ReviewCard
+                      key={review._id}
+                      review={review}
+                      currentUserId={user?._id}
+                      onEdit={handleEditReview}
+                      onDelete={handleDeleteReview}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-4">
+            {id && <BookAnalyticsComponent bookId={id} />}
+          </TabsContent>
+        </Tabs>
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -277,7 +291,7 @@ const BookDetail = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
-};
+  )
+}
 
-export default BookDetail;
+export default BookDetail

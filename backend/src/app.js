@@ -4,6 +4,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const bookRoutes = require("./routes/bookRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
 const errorHandler = require("./middleware/errorHandler");
 require("dotenv").config();
 
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
