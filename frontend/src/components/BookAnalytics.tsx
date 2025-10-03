@@ -9,7 +9,6 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     LineChart,
     Line,
     AreaChart,
@@ -31,7 +30,8 @@ const COLORS = [
     'hsl(25, 95%, 53%)',       // Orange - 2 stars  
     'hsl(38, 92%, 50%)',       // Primary yellow - 3 stars
     'hsl(142, 76%, 36%)',      // Green - 4 stars
-    'hsl(240, 80%, 60%)'       // Accent blue/purple - 5 stars
+    'hsl(240, 80%, 60%)',       // Accent blue/purple - 5 stars
+    'hsl(280, 100%, 70%)',        // Light purple
 ]
 
 const CHART_COLORS = {
@@ -154,7 +154,7 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                                 <p className="text-sm text-muted-foreground">Average Rating</p>
                                 <p className="text-2xl font-bold flex items-center gap-1">
                                     {analytics.overview.averageRating}
-                                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                                    <Star className="h-5 w-5 fill-primary text-primary" />
                                 </p>
                             </div>
                             <TrendingUp className="h-8 w-8" style={{ color: CHART_COLORS.success }} />
@@ -211,30 +211,59 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
-                            <PieChart>
-                                <Pie
-                                    data={analytics.ratingDistribution}
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={90}
-                                    innerRadius={30}
-                                    fill="#8884d8"
-                                    dataKey="count"
-                                    label={({ percentage }) => `${percentage}%`}
-                                    labelLine={false}
-                                >
-                                    {analytics.ratingDistribution.map((_, index) => (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={COLORS[index % COLORS.length]}
-                                            stroke="rgba(255,255,255,0.6)"
-                                            strokeWidth={2}
-                                        />
-                                    ))}
-                                </Pie>
-                                <Tooltip content={<CustomTooltip />} />
-                                <Legend />
-                            </PieChart>
+                            {analytics.ratingDistribution && analytics.ratingDistribution.length > 0 ? (
+                                <PieChart>
+                                    <Pie
+                                        data={analytics.ratingDistribution.filter(item => item.count > 0)}
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={90}
+                                        innerRadius={30}
+                                        fill="#8884d8"
+                                        dataKey="count"
+                                        label={({ rating, percentage }) => percentage > 5 ? `${rating}: ${percentage}%` : `${percentage}%`}
+                                        labelLine={false}
+                                    >
+                                        {analytics.ratingDistribution
+                                            .filter(item => item.count > 0)
+                                            .map((entry, index) => {
+                                                const starNumber = parseInt(entry.rating.split(' ')[0])
+                                                return (
+                                                    <Cell
+                                                        key={`cell-${entry.rating}`}
+                                                        fill={COLORS[starNumber] || COLORS[index % COLORS.length]}
+                                                        stroke="rgba(255,255,255,0.6)"
+                                                        strokeWidth={2}
+                                                    />
+                                                )
+                                            })}
+                                    </Pie>
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                const data = payload[0].payload
+                                                return (
+                                                    <div className="bg-background border rounded-lg p-3 shadow-lg">
+                                                        <p className="font-medium">{data.rating}</p>
+                                                        <p style={{ color: payload[0].color }}>
+                                                            Count: {data.count}
+                                                        </p>
+                                                        <p className="text-sm">
+                                                            Percentage: {data.percentage}%
+                                                        </p>
+                                                    </div>
+                                                )
+                                            }
+                                            return null
+                                        }}
+                                    />
+                                    {/* <Legend /> */}
+                                </PieChart>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-muted-foreground">No rating distribution data available</p>
+                                </div>
+                            )}
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
@@ -284,27 +313,58 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={analytics.ratingOverTime}>
-                                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                                <XAxis
-                                    dataKey="date"
-                                    tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                    axisLine={false}
-                                    tickLine={false}
-                                />
-                                <YAxis domain={[0, 5]} axisLine={false} tickLine={false} />
-                                <Tooltip
-                                    content={<CustomTooltip />}
-                                    labelFormatter={(date) => new Date(date).toLocaleDateString()}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="averageRating"
-                                    stroke={CHART_COLORS.success}
-                                    strokeWidth={3}
-                                    dot={{ fill: CHART_COLORS.success, strokeWidth: 2, r: 4 }}
-                                />
-                            </LineChart>
+                            {analytics.ratingOverTime && analytics.ratingOverTime.length > 0 ? (
+                                <LineChart data={analytics.ratingOverTime}>
+                                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                                    <XAxis
+                                        dataKey="date"
+                                        tickFormatter={(date) => {
+                                            const d = new Date(date)
+                                            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                                        }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                    />
+                                    <YAxis
+                                        domain={[1, 5]}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tickCount={5}
+                                        tickFormatter={(value) => value.toFixed(1)}
+                                    />
+                                    <Tooltip
+                                        content={({ active, payload, label }) => {
+                                            if (active && payload && payload.length) {
+                                                const date = new Date(label)
+                                                return (
+                                                    <div className="bg-background border rounded-lg p-3 shadow-lg">
+                                                        <p className="font-medium">{date.toLocaleDateString()}</p>
+                                                        <p style={{ color: payload[0].color }}>
+                                                            Average Rating: {Number(payload[0].value).toFixed(2)}
+                                                        </p>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Reviews: {payload[0].payload.reviewCount}
+                                                        </p>
+                                                    </div>
+                                                )
+                                            }
+                                            return null
+                                        }}
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="averageRating"
+                                        stroke={CHART_COLORS.success}
+                                        strokeWidth={3}
+                                        dot={{ fill: CHART_COLORS.success, strokeWidth: 2, r: 4 }}
+                                        connectNulls={false}
+                                    />
+                                </LineChart>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-muted-foreground">No rating trend data available</p>
+                                </div>
+                            )}
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>

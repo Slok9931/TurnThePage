@@ -256,7 +256,7 @@ const BookDetail = () => {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {reviews.map((review) => (
+                  {reviews.slice().reverse().map((review) => (
                     <ReviewCard
                       key={review._id}
                       review={review}
