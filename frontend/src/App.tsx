@@ -9,8 +9,11 @@ import Landing from "./pages/Landing"
 import Signup from "./pages/Signup"
 import Login from "./pages/Login"
 import Home from "./pages/Home"
+import Dashboard from "./pages/Dashboard"
 import BookDetail from "./pages/BookDetail"
 import Profile from "./pages/Profile"
+import UserProfile from "./pages/UserProfile"
+import UsersSearch from "./pages/UsersSearch"
 import NotFound from "./pages/NotFound"
 import { TooltipProvider } from "./components/ui/tooltip"
 import { Toaster } from "./components/ui/toaster"
@@ -33,8 +36,11 @@ const App = () => (
               <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
               <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/book/:id" element={<ProtectedRoute><BookDetail /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/users/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+              <Route path="/users/search" element={<ProtectedRoute><UsersSearch /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <div className="fixed bottom-4 right-4 z-50">

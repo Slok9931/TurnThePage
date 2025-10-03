@@ -1,7 +1,50 @@
+export interface FollowStatus {
+  status: "none" | "pending" | "accepted" | "self";
+  isFollowing: boolean;
+  isPending: boolean;
+  isFollowingBack?: boolean;
+  isMutual?: boolean;
+  pendingRequestId?: string | null;
+}
+
 export interface User {
   _id: string;
   name: string;
   email: string;
+  username?: string;
+  bio?: string;
+  profilePicture?: {
+    url: string;
+    publicId: string;
+  };
+  coverPicture?: {
+    url: string;
+    publicId: string;
+  };
+  location?: string;
+  website?: string;
+  joinDate?: string;
+  isPrivate?: boolean;
+  favoriteGenres?: string[];
+  socialStats?: {
+    followersCount: number;
+    followingCount: number;
+    booksAddedCount: number;
+    reviewsCount: number;
+  };
+  followStatus?: FollowStatus;
+  preferences?: {
+    notifications: {
+      email: boolean;
+      push: boolean;
+      follows: boolean;
+      reviews: boolean;
+    };
+    privacy: {
+      showEmail: boolean;
+      showReadingActivity: boolean;
+    };
+  };
 }
 
 export interface Book {
@@ -11,8 +54,20 @@ export interface Book {
   description: string;
   genre: string;
   publishedYear: number;
+  isbn?: string;
+  pages?: number;
+  language?: string;
+  publisher?: string;
+  coverImage?: {
+    url: string;
+    publicId: string;
+  };
+  tags?: string[];
   addedBy: User | string;
+  likes?: any[];
+  likesCount?: number;
   averageRating?: number;
+  totalReviews?: number;
   reviewCount?: number;
   createdAt?: string;
   updatedAt?: string;
