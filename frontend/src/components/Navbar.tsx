@@ -1,26 +1,23 @@
-import { Link } from 'react-router-dom';
-import { BookOpen, User, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Link } from 'react-router-dom'
+import { BookOpen, User, LogOut } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
+import { ThemeToggle } from './ThemeToggle'
+import { Button } from './ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 
 export const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuth()
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="container flex h-16 items-center justify-between">
         <Link to={user ? '/home' : '/'} className="flex items-center gap-2 font-bold text-xl">
           <BookOpen className="h-6 w-6 text-primary" />
-          <span className="text-foreground">BookVerse</span>
+          <span className="text-foreground">TurnThePage</span>
         </Link>
 
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           {user ? (
             <>
               <Link to="/home">
@@ -62,5 +59,5 @@ export const Navbar = () => {
         </div>
       </div>
     </nav>
-  );
-};
+  )
+}

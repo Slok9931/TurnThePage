@@ -1,30 +1,30 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { BookOpen } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/hooks/useAuth';
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { BookOpen } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Label } from '../components/ui/label'
+import { Input } from '../components/ui/input'
+import { Button } from '../components/ui/button'
 
 const Signup = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { signup } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
     try {
-      await signup(name, email, password);
+      await signup(name, email, password)
     } catch (error) {
       // Error handled in useAuth
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -37,7 +37,7 @@ const Signup = () => {
           </div>
           <div className="text-center">
             <CardTitle className="text-2xl">Create an account</CardTitle>
-            <CardDescription>Join the BookVerse community</CardDescription>
+            <CardDescription>Join the TurnThePage community</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -89,7 +89,7 @@ const Signup = () => {
         </CardContent>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default Signup;
+export default Signup
