@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { BookCard } from '@/components/BookCard';
-import { booksApi } from '@/api/books';
-import type { Book } from '@/types';
 import { toast } from 'sonner';
+import type { Book } from '../types'
+import { booksApi } from '../api/books'
+import { Input } from '../components/ui/input'
+import { BookCard } from '../components/BookCard'
 
 const Home = () => {
   const [books, setBooks] = useState<Book[]>([]);
