@@ -5,13 +5,16 @@ const {
   getBookById,
   updateBook,
   deleteBook,
+  toggleBookLike,
+  uploadBookCover,
 } = require("../controllers/bookController");
 const { authenticate } = require("../middleware/auth");
+const { upload } = require("../config/cloudinary");
 
 const router = express.Router();
 
 // Route to add a new book
-router.post("/", authenticate, addBook);
+router.post("/", authenticate, upload.single("coverImage"), addBook);
 
 // Route to get all books with pagination
 router.get("/", getAllBooks);
@@ -38,5 +41,16 @@ router.get("/user/my-books", authenticate, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// Route to like/unlike a book
+router.post("/:id/like", authenticate, toggleBookLike);
+
+// Route to upload book cover
+router.post(
+  "/:id/cover",
+  authenticate,
+  upload.single("coverImage"),
+  uploadBookCover
+);
 
 module.exports = router;
