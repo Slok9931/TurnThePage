@@ -99,6 +99,33 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
+  .hover-lift {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .glass-effect {
+    @apply bg-background/80 backdrop-blur-md border border-border/20;
+  }
+  
+  .animate-gradient {
+    animation: gradient 15s ease infinite;
+    background-size: 400% 400%;
+  }
+  
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+}
+
+@layer utilities {
   .animate-gradient {
     background-size: 200% 200%;
     animation: gradient 3s ease infinite;

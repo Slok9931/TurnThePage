@@ -13,11 +13,20 @@ const createBook = async (bookData, userId) => {
 
 // Get all books with pagination
 const getAllBooks = async (page = 1, limit = 5) => {
+  // Convert to numbers to avoid BSON type errors
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+
   const books = await Book.find()
-    .skip((page - 1) * limit)
-    .limit(limit);
+    .skip((pageNum - 1) * limitNum)
+    .limit(limitNum);
   const totalBooks = await Book.countDocuments();
-  return { books, totalBooks };
+  return {
+    books,
+    totalBooks,
+    currentPage: pageNum,
+    totalPages: Math.ceil(totalBooks / limitNum),
+  };
 };
 
 // Get a book by ID
