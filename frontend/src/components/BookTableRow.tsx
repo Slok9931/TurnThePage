@@ -18,7 +18,7 @@ export const BookTableRow = ({ book }: BookTableRowProps) => {
                 </Link>
             </TableCell>
             <TableCell>{book.author}</TableCell>
-            <TableCell>
+            <TableCell className='min-w-52'>
                 <Badge variant="secondary" className="text-xs">
                     {book.genre}
                 </Badge>
