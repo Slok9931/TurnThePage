@@ -25,7 +25,29 @@ interface BookAnalyticsProps {
     bookId: string
 }
 
-const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06d6a0']
+// Color palette matching the website's aesthetic
+const COLORS = [
+    'hsl(0, 84.2%, 60.2%)',     // Red (destructive) - 1 star
+    'hsl(25, 95%, 53%)',       // Orange - 2 stars  
+    'hsl(38, 92%, 50%)',       // Primary yellow - 3 stars
+    'hsl(142, 76%, 36%)',      // Green - 4 stars
+    'hsl(240, 80%, 60%)'       // Accent blue/purple - 5 stars
+]
+
+const CHART_COLORS = {
+    primary: 'hsl(38, 92%, 50%)',           // Primary yellow/gold
+    secondary: 'hsl(240, 60%, 25%)',       // Secondary dark blue
+    accent: 'hsl(240, 80%, 60%)',          // Accent blue/purple
+    success: 'hsl(142, 76%, 36%)',         // Green
+    warning: 'hsl(25, 95%, 53%)',          // Orange
+    danger: 'hsl(0, 84.2%, 60.2%)',       // Red
+    muted: 'hsl(240, 20%, 45%)',          // Muted foreground
+    // Additional harmonious colors for variety
+    purple: 'hsl(280, 100%, 70%)',        // Light purple
+    teal: 'hsl(180, 100%, 35%)',          // Teal
+    indigo: 'hsl(230, 100%, 65%)',        // Indigo
+    pink: 'hsl(330, 100%, 70%)',          // Pink
+}
 
 const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
     const [analytics, setAnalytics] = useState<BookAnalytics | null>(null)
@@ -120,7 +142,7 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                                 <p className="text-sm text-muted-foreground">Total Reviews</p>
                                 <p className="text-2xl font-bold">{analytics.overview.totalReviews}</p>
                             </div>
-                            <Users className="h-8 w-8 text-blue-500" />
+                            <Users className="h-8 w-8" style={{ color: CHART_COLORS.primary }} />
                         </div>
                     </CardContent>
                 </Card>
@@ -135,7 +157,7 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                                     <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                                 </p>
                             </div>
-                            <TrendingUp className="h-8 w-8 text-green-500" />
+                            <TrendingUp className="h-8 w-8" style={{ color: CHART_COLORS.success }} />
                         </div>
                     </CardContent>
                 </Card>
@@ -147,7 +169,7 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                                 <p className="text-sm text-muted-foreground">5-Star Reviews</p>
                                 <p className="text-2xl font-bold">{analytics.overview.highestRated}</p>
                             </div>
-                            <Star className="h-8 w-8 text-yellow-500" />
+                            <Star className="h-8 w-8" style={{ color: CHART_COLORS.warning }} />
                         </div>
                     </CardContent>
                 </Card>
@@ -159,7 +181,7 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                                 <p className="text-sm text-muted-foreground">This Week</p>
                                 <p className="text-2xl font-bold">{analytics.overview.reviewsThisWeek}</p>
                             </div>
-                            <Calendar className="h-8 w-8 text-purple-500" />
+                            <Calendar className="h-8 w-8" style={{ color: CHART_COLORS.accent }} />
                         </div>
                     </CardContent>
                 </Card>
@@ -171,7 +193,7 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                                 <p className="text-sm text-muted-foreground">1-Star Reviews</p>
                                 <p className="text-2xl font-bold">{analytics.overview.lowestRated}</p>
                             </div>
-                            <Activity className="h-8 w-8 text-red-500" />
+                            <Activity className="h-8 w-8" style={{ color: CHART_COLORS.danger }} />
                         </div>
                     </CardContent>
                 </Card>
@@ -183,7 +205,7 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <BarChart3 className="h-5 w-5" />
+                            <BarChart3 className="h-5 w-5" style={{ color: CHART_COLORS.primary }} />
                             Rating Distribution
                         </CardTitle>
                     </CardHeader>
@@ -194,13 +216,20 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                                     data={analytics.ratingDistribution}
                                     cx="50%"
                                     cy="50%"
-                                    outerRadius={100}
+                                    outerRadius={90}
+                                    innerRadius={30}
                                     fill="#8884d8"
                                     dataKey="count"
-                                    label={({ rating, percentage }) => `${rating}: ${percentage}%`}
+                                    label={({ percentage }) => `${percentage}%`}
+                                    labelLine={false}
                                 >
                                     {analytics.ratingDistribution.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={COLORS[index % COLORS.length]}
+                                            stroke="rgba(255,255,255,0.6)"
+                                            strokeWidth={2}
+                                        />
                                     ))}
                                 </Pie>
                                 <Tooltip content={<CustomTooltip />} />
@@ -214,24 +243,32 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5" />
+                            <TrendingUp className="h-5 w-5" style={{ color: CHART_COLORS.success }} />
                             Reviews Over Time
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={analytics.reviewsOverTime}>
-                                <CartesianGrid strokeDasharray="3 3" />
+                                <defs>
+                                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.9} />
+                                        <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0.3} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis
                                     dataKey="month"
                                     tickFormatter={formatMonth}
+                                    axisLine={false}
+                                    tickLine={false}
                                 />
-                                <YAxis />
+                                <YAxis axisLine={false} tickLine={false} />
                                 <Tooltip
                                     content={<CustomTooltip />}
                                     labelFormatter={formatMonth}
                                 />
-                                <Bar dataKey="count" fill="#3b82f6" />
+                                <Bar dataKey="count" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -241,19 +278,21 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Star className="h-5 w-5" />
+                            <Star className="h-5 w-5" style={{ color: CHART_COLORS.warning }} />
                             Average Rating Trend
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
                             <LineChart data={analytics.ratingOverTime}>
-                                <CartesianGrid strokeDasharray="3 3" />
+                                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis
                                     dataKey="date"
                                     tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    axisLine={false}
+                                    tickLine={false}
                                 />
-                                <YAxis domain={[0, 5]} />
+                                <YAxis domain={[0, 5]} axisLine={false} tickLine={false} />
                                 <Tooltip
                                     content={<CustomTooltip />}
                                     labelFormatter={(date) => new Date(date).toLocaleDateString()}
@@ -261,9 +300,9 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                                 <Line
                                     type="monotone"
                                     dataKey="averageRating"
-                                    stroke="#22c55e"
+                                    stroke={CHART_COLORS.success}
                                     strokeWidth={3}
-                                    dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
+                                    dot={{ fill: CHART_COLORS.success, strokeWidth: 2, r: 4 }}
                                 />
                             </LineChart>
                         </ResponsiveContainer>
@@ -274,23 +313,28 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Activity className="h-5 w-5" />
+                            <Activity className="h-5 w-5" style={{ color: CHART_COLORS.accent }} />
                             Daily Activity (Last 7 Days)
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
                             <AreaChart data={analytics.dailyActivity}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="day" />
-                                <YAxis />
+                                <defs>
+                                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={CHART_COLORS.accent} stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor={CHART_COLORS.accent} stopOpacity={0.1} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                                <XAxis dataKey="day" axisLine={false} tickLine={false} />
+                                <YAxis axisLine={false} tickLine={false} />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Area
                                     type="monotone"
                                     dataKey="reviews"
-                                    stroke="#8b5cf6"
-                                    fill="#8b5cf6"
-                                    fillOpacity={0.3}
+                                    stroke={CHART_COLORS.accent}
+                                    fill="url(#areaGradient)"
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -303,7 +347,7 @@ const BookAnalyticsComponent = ({ bookId }: BookAnalyticsProps) => {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Users className="h-5 w-5" />
+                            <Users className="h-5 w-5" style={{ color: CHART_COLORS.secondary }} />
                             Top Reviewers
                         </CardTitle>
                     </CardHeader>
