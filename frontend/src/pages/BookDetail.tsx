@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { BookOpen, Calendar, User, ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { BookOpen, Calendar, User, ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { booksApi } from '../api/books'
 import { reviewsApi } from '../api/reviews'
 import { useAuth } from '../hooks/useAuth'
-import type { Book } from '../types/book.types'
-import type { Review, ReviewStats } from '../types/review.types'
+import type { Book, Review, ReviewStats } from '../types/index'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -15,6 +14,7 @@ import { StarRating } from '../components/StarRating'
 import { Textarea } from '../components/ui/textarea'
 import { ReviewCard } from '../components/ReviewCard'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog'
+import EditBookDialog from '../components/EditBookDialog'
 
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -162,9 +162,10 @@ const BookDetail = () => {
               </div>
               {isBookOwner && (
                 <div className="flex gap-2">
-                  <Button variant="outline" size="icon" onClick={() => navigate(`/edit-book/${book._id}`)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  <EditBookDialog 
+                    book={book} 
+                    onBookUpdated={() => fetchBookData()}
+                  />
                   <Button variant="outline" size="icon" onClick={() => setShowDeleteDialog(true)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
