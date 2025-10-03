@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '../components/ui/table'
 import { BookCard } from '../components/BookCard'
 import { BookTableRow } from '../components/BookTableRow'
+import { GridSkeleton, TableSkeleton } from '../components/Skeletons'
 
 type ViewMode = 'grid' | 'table'
 
@@ -29,7 +30,7 @@ const Home = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [genreFilter, setGenreFilter] = useState('')
-  const [booksPerPage, setBooksPerPage] = useState(12) // Default books per page
+  const [booksPerPage, setBooksPerPage] = useState(10) // Default books per page
   const [pagination, setPagination] = useState<PaginationInfo>({
     currentPage: 1,
     totalPages: 0,
@@ -124,56 +125,6 @@ const Home = () => {
     }
     return pages
   }
-
-  // Loading skeletons
-  const GridSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {[...Array(booksPerPage)].map((_, i) => (
-        <div key={i} className="h-64 bg-muted animate-pulse rounded-lg" />
-      ))}
-    </div>
-  )
-
-  const TableSkeleton = () => (
-    <div className="border rounded-lg">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Author</TableHead>
-            <TableHead>Genre</TableHead>
-            <TableHead className="text-center">Year</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {[...Array(booksPerPage)].map((_, i) => (
-            <TableRow key={i}>
-              <td className="p-4">
-                <div className="h-4 bg-muted animate-pulse rounded w-32" />
-              </td>
-              <td className="p-4">
-                <div className="h-4 bg-muted animate-pulse rounded w-24" />
-              </td>
-              <td className="p-4">
-                <div className="h-4 bg-muted animate-pulse rounded w-20" />
-              </td>
-              <td className="p-4">
-                <div className="h-4 bg-muted animate-pulse rounded w-16 mx-auto" />
-              </td>
-              <td className="p-4">
-                <div className="h-4 bg-muted animate-pulse rounded w-48" />
-              </td>
-              <td className="p-4">
-                <div className="h-4 bg-muted animate-pulse rounded w-20 ml-auto" />
-              </td>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  )
 
   return (
     <div className="container py-8 space-y-8">
@@ -274,7 +225,7 @@ const Home = () => {
       </div>
 
       {loading ? (
-        viewMode === 'grid' ? <GridSkeleton /> : <TableSkeleton />
+        viewMode === 'grid' ? <GridSkeleton booksPerPage={booksPerPage} /> : <TableSkeleton booksPerPage={booksPerPage} />
       ) : books.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-lg text-muted-foreground">
@@ -323,7 +274,7 @@ const Home = () => {
       ) : (
         <div className="space-y-6">
           {loadingMore ? (
-            <TableSkeleton />
+            <TableSkeleton booksPerPage={booksPerPage} />
           ) : (
             <div className="border rounded-lg">
               <Table>
