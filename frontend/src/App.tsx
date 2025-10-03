@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound"
 import { TooltipProvider } from "./components/ui/tooltip"
 import { Toaster } from "./components/ui/toaster"
 import { Toaster as Sonner } from 'sonner'
+import { ThemeToggle } from "./components/ThemeToggle"
 
 const queryClient = new QueryClient()
 
@@ -40,6 +41,9 @@ const App = () => (
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <div className="fixed bottom-4 right-4 z-50">
+              <ThemeToggle />
+            </div>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

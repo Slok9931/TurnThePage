@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { BookOpen, User, LogOut } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { ThemeToggle } from './ThemeToggle'
 import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 
@@ -17,12 +16,8 @@ export const Navbar = () => {
         </Link>
 
         <div className="flex items-center gap-4">
-          <ThemeToggle />
           {user ? (
             <>
-              <Link to="/home">
-                <Button variant="ghost">Browse Books</Button>
-              </Link>
               <Link to="/add-book">
                 <Button variant="ghost">Add Book</Button>
               </Link>
