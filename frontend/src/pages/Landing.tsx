@@ -472,7 +472,7 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto text-center text-white space-y-8">
             <h2 className="text-4xl md:text-6xl font-bold">
               Ready to Transform Your
-              <span className="block bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
                 Reading Experience?
               </span>
             </h2>
