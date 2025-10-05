@@ -16,7 +16,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: 'https://turn-the-page-client.vercel.app/',
     credentials: true,
   })
 );
