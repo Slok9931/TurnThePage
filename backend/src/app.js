@@ -14,14 +14,38 @@ require("dotenv").config();
 const app = express();
 
 // Middleware
+const allowedOrigins = [
+  "http://localhost:5173", // Vite default port
+  "http://localhost:3000", // React default port
+  "http://localhost:8080", // Alternative port
+  "https://turn-the-page-client.vercel.app",
+  process.env.FRONTEND_URL,
+].filter(Boolean); // Remove any undefined values
+
 app.use(
   cors({
-    origin: 'https://turn-the-page-client.vercel.app/',
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Health check route
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK", message: "Server is running" });
+});
 
 // Routes
 app.use("/api/auth", authRoutes);
